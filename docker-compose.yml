@@ -1,0 +1,57 @@
+networks:
+  my-network:
+    external: true
+services:
+
+  nginx-page:
+    image: odontologia
+    networks:
+      - my-network
+    ports:
+      - 80:80
+      - 443:443
+
+  db-odontologia:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    environment:
+      POSTGRES_PASSWORD: admin
+    ports:
+      - 5432:5432
+    networks:
+      - my-network
+
+  pacientes-service:
+    depends_on:
+      - db-odontologia
+    image: pacientes-service
+    ports:
+      - 8081:8081
+    networks:
+      - my-network
+
+  fichas-service:
+    depends_on:
+      - db-odontologia
+    image: fichas-microservice
+    ports:
+      - 8080:8080
+    networks:
+      - my-network
+        
+  odontograma-service:
+    depends_on:
+      - db-odontologia
+    image: odontograma-microservice
+    ports:
+      - 8082:8082
+    networks:
+      - my-network
